@@ -1,6 +1,12 @@
-version: '3'
+version: '3.9'
+
 services:
-  web:
-    build: .
+  tljh-server:
+    image: tljh/server
+    build:
+      context: .
+      args:
+        - ADMIN_USER=${ADMIN_USER:-admin}
     ports:
       - "12000:80"
+    stop_signal: SIGRTMIN+3
