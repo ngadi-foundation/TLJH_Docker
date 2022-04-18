@@ -1,24 +1,18 @@
-FROM ubuntu:22.04
-ARG ADMIN_USER
+#syntax=docker/dockerfile:1.4
 
-RUN apt-get update --yes && \
-    apt-get install --yes systemd curl git sudo python3 python3-dev && \
-    # Kill all the things we don't need
-    find /etc/systemd/system \
-    /lib/systemd/system \
-    -path '*.wants/*' \
-    -not -name '*journald*' \
-    -not -name '*systemd-tmpfiles*' \
-    -not -name '*systemd-user-sessions*' \
-    -exec rm \{} \; && \
-    # prepare sudo
-    mkdir -p /etc/sudoers.d && \
-    systemctl set-default multi-user.target
-    # https://tljh.jupyter.org/en/latest/topic/customizing-installer.html#topic-customizing-installer
+FROM jupyterhub/jupyterhub:2.2 as base
 
-# Uncomment these lines for a development install
-#ENV TLJH_BOOTSTRAP_DEV=yes
-#ENV TLJH_BOOTSTRAP_PIP_SPEC=/srv/src
-#ENV PATH=/opt/tljh/hub/bin:${PATH}
+ENV PIP_DISABLE_PIP_VERSION_CHECK=on \
+    PIPENV_SYSTEM=1 \
+    PIPENV_IGNORE_PIPFILE=1 \
+    PIPENV_YES=1 \
+    PIPENV_QUIET=1
 
-ENTRYPOINT ["/bin/bash", "-c", "exec /sbin/init --log-target=journal 3>&1"]
+WORKDIR /build
+# https://github.com/moby/buildkit/blob/master/frontend/dockerfile/docs/syntax.md#linked-copies-copy---link-add---link=
+COPY --link / /build
+
+RUN set -x; pip install --no-cache 'pipenv==2022.4.8' && \
+    pipenv install
+
+WORKDIR /srv/jupyterhub/

@@ -1,2 +1,5 @@
-.env
+*.md
 *.pdf
+.vscode/
+Dockerfile
+docker-compose.yml
